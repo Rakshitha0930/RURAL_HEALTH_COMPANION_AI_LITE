@@ -8,14 +8,20 @@ import './index.css'
 import './i18n/index.js'   // initialise i18next before render
 
 // ── Clear stale expired auth state on startup ─────────────────────────────────
-// Prevents a loop where an expired token causes 401s on every request
 try {
-  const stored = JSON.parse(localStorage.getItem('rhc-auth') || '{}')
-  const state  = stored?.state
-  if (state?.tokenExpiresAt && new Date(state.tokenExpiresAt) < new Date()) {
-    localStorage.removeItem('rhc-auth')
+  const raw = localStorage.getItem('rhc-auth')
+  if (raw) {
+    const stored = JSON.parse(raw)
+    const exp = stored?.state?.tokenExpiresAt
+    // Clear if token is expired OR if it's older than 7 days (token lifetime)
+    const isExpired = !exp || new Date(exp) < new Date()
+    if (isExpired) {
+      localStorage.removeItem('rhc-auth')
+      console.info('[RHC] Cleared expired auth token from localStorage')
+    }
   }
 } catch {
+  // Corrupted data — clear it
   localStorage.removeItem('rhc-auth')
 }
 

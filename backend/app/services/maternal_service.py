@@ -160,7 +160,6 @@ class MaternalService:
     async def get_active_profile(self, user_id: str) -> Optional[dict]:
         doc = await self.profiles.find_one(
             {"user_id": user_id, "is_active": True},
-            {"_id": 1, "user_id": 1, "mother_name": 1, "lmp_date": 1, "created_at": 1, "current_week": 1}
         )
         if doc:
             _serialize(doc)

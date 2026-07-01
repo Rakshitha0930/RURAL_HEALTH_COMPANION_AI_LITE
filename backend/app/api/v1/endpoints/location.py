@@ -2,30 +2,6 @@
 Location / Places endpoints.
 
 Routes:
-  GET  /location/nearby          — nearby healthcare search
-  GET  /location/place/{id}      — place detail
-  GET  /location/geocode         — address → lat/lng
-  GET  /location/config          — return Maps API key for frontend
-"""
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-
-from app.api.deps import get_current_user
-from app.config.settings import settings
-from app.schemas.location import (
-    NearbySearchRequest, NearbySearchResponse,
-    PlaceDetailResponse, GeocodeResponse,
-)
-from app.services.location_service import location_service
-from app.utils.logger import get_logger
-
-router = APIRouter()
-logger = get_logger(__name__)
-
-
-"""
-Location / Places endpoints.
-
-Routes:
   GET  /location/nearby              — nearby healthcare search
   GET  /location/hospitals/nearby    — smart hospital finder (always uses user GPS location)
   GET  /location/place/{id}          — place detail

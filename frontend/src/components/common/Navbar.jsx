@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import {
   FaHeartbeat, FaBars, FaTimes, FaUserCircle,
   FaBell, FaChevronDown, FaSignOutAlt, FaCog,
 } from 'react-icons/fa'
 import { useAuthStore } from '../../store/authStore'
 import LanguageSwitcher from './LanguageSwitcher'
+import api from '../../lib/axios'
 import clsx from 'clsx'
 
 // ── Public nav links (unauthenticated) ──────────────────────────────────────
@@ -13,48 +15,62 @@ const publicLinks = [
   { to: '/', label: 'Home' },
 ]
 
-// ── Notifications mock ───────────────────────────────────────────────────────
-const NOTIFICATIONS = [
-  { id: 1, text: 'Your health record was saved.', time: '2m ago', read: false },
-  { id: 2, text: 'Daily health tip is ready.', time: '1h ago', read: false },
-  { id: 3, text: 'AI assistant is available.', time: '3h ago', read: true },
-]
-
+// ── Notification dropdown ─────────────────────────────────────────────────────
 function NotificationDropdown() {
-  const unread = NOTIFICATIONS.filter((n) => !n.read).length
+  const { data, isLoading } = useQuery({
+    queryKey: ['notif-logs-navbar'],
+    queryFn: () => api.get('/notifications/logs?limit=5').then(r => r.data),
+    staleTime: 1000 * 30,
+    retry: false,
+  })
+
+  const logs = data?.logs ?? []
 
   return (
     <div className="absolute right-0 top-full mt-2 w-80 rounded-2xl bg-white shadow-card-hover ring-1 ring-gray-100 animate-slide-up z-50">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
         <p className="text-sm font-semibold text-gray-900">Notifications</p>
-        {unread > 0 && (
-          <span className="badge-blue">{unread} new</span>
-        )}
+        <Link to="/notifications" className="text-xs font-medium text-primary-600 hover:text-primary-700">
+          View all
+        </Link>
       </div>
       <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
-        {NOTIFICATIONS.map((n) => (
-          <li
-            key={n.id}
-            className={clsx(
-              'flex items-start gap-3 px-4 py-3 text-sm transition-colors hover:bg-gray-50',
-              !n.read && 'bg-primary-50/40'
-            )}
-          >
-            <span className={clsx(
-              'mt-1.5 h-2 w-2 flex-shrink-0 rounded-full',
-              n.read ? 'bg-gray-300' : 'bg-primary-500'
-            )} />
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-800 leading-snug">{n.text}</p>
-              <p className="mt-0.5 text-xs text-gray-400">{n.time}</p>
-            </div>
+        {isLoading ? (
+          <li className="px-4 py-6 text-center text-sm text-gray-400">Loading…</li>
+        ) : logs.length === 0 ? (
+          <li className="px-4 py-8 text-center text-sm text-gray-400">
+            <FaBell className="mx-auto mb-2 h-6 w-6 text-gray-200" />
+            No recent notifications
           </li>
-        ))}
+        ) : (
+          logs.map((n, i) => (
+            <li key={i} className="flex items-start gap-3 px-4 py-3 text-sm hover:bg-gray-50">
+              <span className={clsx(
+                'mt-1.5 h-2 w-2 flex-shrink-0 rounded-full',
+                n.status === 'sent' ? 'bg-green-500' : 'bg-red-400'
+              )} />
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-800 leading-snug truncate">
+                  {n.vaccine_name
+                    ? `${n.vaccine_name} reminder — ${n.profile_name || ''}`
+                    : 'Reminder sent'}
+                </p>
+                <p className="mt-0.5 text-xs text-gray-400">
+                  {n.sent_at ? new Date(n.sent_at).toLocaleDateString() : ''}
+                  {' · '}
+                  <span className={n.status === 'sent' ? 'text-green-600' : 'text-red-500'}>
+                    {n.status === 'sent' ? 'Sent' : 'Failed'}
+                  </span>
+                </p>
+              </div>
+            </li>
+          ))
+        )}
       </ul>
       <div className="border-t border-gray-100 px-4 py-2.5">
-        <button className="text-xs font-medium text-primary-600 hover:text-primary-700">
-          Mark all as read
-        </button>
+        <Link to="/notifications" className="text-xs font-medium text-primary-600 hover:text-primary-700">
+          Manage notification settings →
+        </Link>
       </div>
     </div>
   )
@@ -112,7 +128,15 @@ export default function Navbar({ onSidebarToggle }) {
   const notifRef = useRef(null)
   const userRef = useRef(null)
 
-  const unreadCount = NOTIFICATIONS.filter((n) => !n.read).length
+  // Real notification count from API
+  const { data: notifData } = useQuery({
+    queryKey: ['notif-logs-count'],
+    queryFn: () => api.get('/notifications/logs?limit=10').then(r => r.data),
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60,
+    retry: false,
+  })
+  const unreadCount = notifData?.logs?.filter(n => n.status === 'sent')?.length ?? 0
 
   // Close dropdowns on outside click
   useEffect(() => {

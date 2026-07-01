@@ -323,7 +323,7 @@ export default function AIChatPage() {
     onError: () => toast.error('Failed to get a response. Please try again.'),
   })
 
-  const sendMessage = (text) => {
+  const sendMessage = useCallback((text) => {
     const trimmed = (text || input).trim()
     if (!trimmed || chatMutation.isPending) return
     tts.stop()
@@ -334,7 +334,7 @@ export default function AIChatPage() {
     }])
     setInput('')
     chatMutation.mutate(trimmed)
-  }
+  }, [input, chatMutation, tts])
 
   // Voice input result → fill textarea and auto-send
   const handleVoiceResult = useCallback((transcript) => {
@@ -343,7 +343,7 @@ export default function AIChatPage() {
     setTimeout(() => {
       sendMessage(transcript)
     }, 400)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sendMessage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit  = (e) => { e.preventDefault(); sendMessage() }
   const handleKeyDown = (e) => {

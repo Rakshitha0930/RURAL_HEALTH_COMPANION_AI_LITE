@@ -1,6 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+// Force-clear any stale state before the store initialises
+// This runs once on import and handles cases where main.jsx cleanup didn't run
+try {
+  const raw = localStorage.getItem('rhc-auth')
+  if (raw) {
+    const s = JSON.parse(raw)?.state
+    if (s?.tokenExpiresAt && new Date(s.tokenExpiresAt) < new Date()) {
+      localStorage.removeItem('rhc-auth')
+    }
+  }
+} catch {
+  localStorage.removeItem('rhc-auth')
+}
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({

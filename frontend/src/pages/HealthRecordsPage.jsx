@@ -142,7 +142,7 @@ export default function HealthRecordsPage() {
       ) : (
         <div className="space-y-3">
           {data?.records?.map((record) => (
-            <div key={record._id} className="card flex items-start justify-between gap-4">
+            <div key={record.id} className="card flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className={`badge ${TYPE_COLORS[record.record_type] || TYPE_COLORS.Other}`}>
@@ -159,7 +159,7 @@ export default function HealthRecordsPage() {
                 )}
               </div>
               <button
-                onClick={() => deleteMutation.mutate(record._id)}
+                onClick={() => deleteMutation.mutate(record.id)}
                 className="flex-shrink-0 rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                 aria-label="Delete record"
               >

@@ -34,7 +34,10 @@ async def lifespan(app: FastAPI):
     # Seed default guidance data if empty
     from app.database.connection import get_db
     from app.services.guidance_service import GuidanceService
-    await GuidanceService(get_db()).seed_default_guidance()
+    try:
+        await GuidanceService(get_db()).seed_default_guidance()
+    except Exception as exc:
+        logger.warning(f"Could not seed guidance data: {exc}")
     
     start_scheduler()          # ← start daily reminder job
     yield

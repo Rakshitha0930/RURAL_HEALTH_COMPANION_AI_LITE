@@ -9,7 +9,7 @@ import {
   FaSearch, FaMapMarkerAlt, FaSpinner, FaCrosshairs,
   FaList, FaMap, FaFilter, FaTimesCircle, FaPhone,
   FaDirections, FaHospital, FaExclamationTriangle,
-  FaSync, FaInfoCircle, FaCopy, FaLink, FaCheckCircle,
+  FaSync, FaCopy, FaLink, FaCheckCircle,
 } from 'react-icons/fa'
 import { useNearbyPlaces, CATEGORIES } from '../hooks/useNearbyPlaces'
 
